@@ -7,9 +7,17 @@ import itertools
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-
-
+import base64
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email.mime.application import MIMEApplication
+import tempfile
+import tempfile
+from os.path import basename
+import smtplib
+import ssl
+import datetime as dt
 
 
 def translate_wkn(df, figi_key=None):
@@ -98,6 +106,17 @@ def history_data(df):
     df_out.columns = pd.to_datetime(df_out.columns)
 
     return df_out
+
+def get_table_download_link(df):
+    print('get_table_download_link was called')
+    """Generates a link allowing the data in a given panda dataframe to be downloaded
+    in:  dataframe
+    out: href string
+    """
+    csv = df.to_csv()
+    b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
+    href = f'<a href="data:file/csv;base64,{b64}" download="results.csv">Download results here!</a>'
+    return href
 
 
 def send_email(homename, sender_email, receiver_email, password, port, signature, df, debug):
