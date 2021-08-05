@@ -18,6 +18,7 @@ from os.path import basename
 import smtplib
 import ssl
 import datetime as dt
+import time
 
 
 def translate_wkn(df, figi_key=None):
@@ -57,15 +58,25 @@ def translate_wkn(df, figi_key=None):
     # REQUEST
     responses = []
 
-    for jobs in sjobs:
+    for i, jobs in enumerate(sjobs):
+        print(f'\n\nhandling job batch {i} of {len(jobs)}')
+        print(f'Len job: {len(jobs)}')
         r = requests.post(url=openfigi_url, headers=openfigi_headers,
-                    json=jobs).json()
+                    json=jobs)
 
-        for i in range(len(r)):
-            try:
-                responses.append(r[i].get('data')[0].get('ticker'))
-            except:
-                responses.append('n/a') # fill the list to match the df
+        if r.status_code == 200:
+            re = r.json()
+            for i in range(len(re)):
+                try:
+                    responses.append(re[i].get('data')[0].get('ticker'))
+                except:
+                    responses.append(np.nan) # fill the list to match the df
+        else:
+            print(f'Couldnt reach figi. Error {r.content}')
+            _ = [responses.append(np.nan) for x in range(len(jobs))]
+
+        if not figi_key:
+            time.sleep(10)
 
     df_new['ticker'] = responses
 
