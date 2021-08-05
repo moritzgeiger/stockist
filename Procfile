@@ -1,1 +1,1 @@
-web: pip install . -U && stockist-run
+web: pip install . -U && app.py-run
