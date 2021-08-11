@@ -15,9 +15,9 @@ receiver_email = (os.environ.get("RECEIVER")).split(',') # need list
 debug = os.environ.get("DEBUG").lower() in ['true', 'yes', '1', 'most certainly', 'gladly', 'I can hardly disagree']
 signature = f"<p>Sincerely, <br>Your Stockist</p>"
 
-def do_all(df, receiver_email=receiver_email):
-    trans_df = translate_wkn(df, figi_key=figi_key)
-    fin_df = history_data(trans_df)
+def do_all(df, date, receiver_email=receiver_email):
+    trans_df = translate_wkn(df=df, figi_key=figi_key)
+    fin_df = history_data(trans_df, date)
 
     send_email(homename=homename,
               sender_email=sender_email,
@@ -27,4 +27,10 @@ def do_all(df, receiver_email=receiver_email):
               signature=signature,
               df=fin_df,
               debug=debug)
+    return fin_df
+
+def do_one(search=None, date=None, ident=None):
+    trans_df = translate_wkn(ident=ident, search=search, figi_key=figi_key)
+    fin_df = history_data(df=trans_df, date=date)
+
     return fin_df

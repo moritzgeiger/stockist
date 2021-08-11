@@ -21,7 +21,7 @@ import datetime as dt
 import time
 
 
-def translate_wkn(df, figi_key=None):
+def translate_wkn(df=None, search=None, ident=None, figi_key=None):
     print('translate_wkn was called.')
     '''
     translates the wkn to the intl stock ticker code.
@@ -36,10 +36,16 @@ def translate_wkn(df, figi_key=None):
     openfigi_url = 'https://api.openfigi.com/v1/mapping'
     openfigi_headers = {'Content-Type': 'text/json'}
 
+    if ident == 'ticker':
+        return pd.DataFrame({'ticker':[search]})
 
+    if ident == 'WKN':
+        # implies that we are looking for only one entry
+        df_new = pd.DataFrame({'WKN':[search]})
 
-    # DF handle (drop duplicates to avoid double requests)
-    df_new = df.copy().drop_duplicates(subset=['WKN', 'Land']).dropna(subset=['WKN'])
+    if not ident:
+        # DF handle (drop duplicates to avoid double requests)
+        df_new = df.copy().drop_duplicates(subset=['WKN']).dropna(subset=['WKN'])
 
     # INIT JOBS
     jobs = []
@@ -54,7 +60,6 @@ def translate_wkn(df, figi_key=None):
     else:
         sjobs = [jobs[i:i + 10] for i in range(0, len(jobs), 10)]
 
-
     # REQUEST
     responses = []
 
@@ -66,10 +71,11 @@ def translate_wkn(df, figi_key=None):
 
         if r.status_code == 200:
             re = r.json()
-            for i in range(len(re)):
+            for n in range(len(re)):
                 try:
-                    responses.append(re[i].get('data')[0].get('ticker'))
+                    responses.append(re[n].get('data')[0].get('ticker'))
                 except:
+                    print(f'Error for row {n}.\n{re[n].get("error")}')
                     responses.append(np.nan) # fill the list to match the df
         else:
             print(f'Couldnt reach figi. Error {r.content}')
@@ -78,12 +84,13 @@ def translate_wkn(df, figi_key=None):
         if not figi_key:
             time.sleep(10)
 
+
     df_new['ticker'] = responses
 
     return df_new.reset_index(drop=True)
 
 
-def history_data(df):
+def history_data(df=None, date=None):
     print('history_data was called')
     '''
     searches for historical stock values for designated stocks with the help of yfinance (yahoo).
@@ -98,33 +105,54 @@ def history_data(df):
     stickers = ' '.join(tickers) # yf requires space separated string
 
     # GET DATA
-    df_concat = yf.download(tickers=stickers,
-                          period='1y',
-                          interval='1d',
-                          show_errors=True,
-                           progress=True)
+    if len(stickers) > 0:
+        selected_date = date.strftime('%Y-%m-%d')
+        end =(date + dt.timedelta(days=1)).strftime('%Y-%m-%d')
+        df_concat = yf.download(tickers=stickers,
+                            start=end,
+                            end=end,
+                            # period='1d',
+                            # interval='1d',
+                            show_errors=True,
+                            progress=True)
 
-    # only get the closing price and remove double indexing
-    new = df_concat.loc[:,('Close', slice(None))]
-    new.columns = [x[1] for x in new.columns] # remove duplex columns
+    else:
+        print(stickers)
+        return f'Could not find data from \n{str(df.WKN[0])}.'
 
-    # transform and add old cols
-    df_trans = new.T.rename_axis('ticker')#.reset_index()
-    df_out = df_trans.merge(df_new[['WKN', 'ticker']], left_index=True, right_on='ticker')
-    df_out = df_out.set_index(['WKN', 'ticker'])
 
-    # set datetime
-    df_out.columns = pd.to_datetime(df_out.columns)
+    if len(df_new) > 1: # implies that there was a bulk search
+        # only get the closing price and remove double indexing
+        new = df_concat.loc[:,('Close', slice(None))]
+        new.columns = [x[1] for x in new.columns] # remove duplex columns
+
+        # transform and add old cols
+        df_trans = new.T.rename_axis('ticker')#.reset_index()
+        df_out = df_trans.merge(df_new[['WKN', 'ticker']], left_index=True, right_on='ticker')
+        df_out = df_out.set_index(['WKN', 'ticker'])
+
+        # set datetime
+        df_out.columns = pd.to_datetime(df_out.columns)
+
+    else:
+        df_out = df_concat
+        df_out.columns = pd.MultiIndex.from_product([df_new.ticker, df_out.columns])
 
     return df_out
 
-def get_table_download_link(df):
+def get_table_download_link(df, sepa):
     print('get_table_download_link was called')
     """Generates a link allowing the data in a given panda dataframe to be downloaded
     in:  dataframe
     out: href string
     """
-    csv = df.to_csv()
+    if sepa == ';':
+        comma = ','
+    else:
+        comma = '.'
+
+    csv = df.to_csv(sep=sepa,
+                    decimal=comma)
     b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
     href = f'<a href="data:file/csv;base64,{b64}" download="results.csv">Download results here!</a>'
     return href
