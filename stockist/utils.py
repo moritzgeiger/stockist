@@ -91,7 +91,7 @@ def translate_wkn(df=None, search=None, ident=None, figi_key=None):
 
 
 def history_data(df=None, date=None):
-    print('history_data was called')
+    print(f'history_data was called for the date: \n{date}')
     '''
     searches for historical stock values for designated stocks with the help of yfinance (yahoo).
     takes in a df which contains the column 'ticker'
