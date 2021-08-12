@@ -50,7 +50,7 @@ def translate_wkn(df=None, search=None, ident=None, figi_key=None):
     # INIT JOBS
     jobs = []
     for i, row in df_new.iterrows():
-        jobs.append({"idType":"ID_WERTPAPIER","idValue":str(row.WKN)}) # don't define country
+        jobs.append({"idType":"ID_WERTPAPIER","idValue":str(row.WKN), "exchCode": "US"}) # don't define country
 
     # slice jobs into junks of 100 or 10 depending on API key
     if figi_key:

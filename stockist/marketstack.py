@@ -45,13 +45,15 @@ def market_data(df=None, key=None, date=None):
         df_new = df_copy.merge(df_new,
                                left_on='ticker',
                                right_on='symbol',
-                               how='left')
-        df_out = df_new[['symbol', 'WKN', 'close', 'date']]
+                               how='left', )
+        df_out = df_new[['ticker', 'WKN', 'close', 'date']]
+        df_out.loc[:,'country'] = 'US'
 
         # set datetime
         df_out.date = pd.to_datetime(df_out.date)
 
     else:
         df_out = df_new[['symbol', 'close', 'date']]
+        df_out.loc[:,'country'] = 'US'
 
     return df_out
