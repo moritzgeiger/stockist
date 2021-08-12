@@ -42,7 +42,10 @@ def market_data(df=None, key=None, date=None):
 
     if len(df_new) > 1: # implies that there was a bulk search
         # transform and add old cols
-        df_new = df_new.merge(df_copy, left_on='symbol', right_on='ticker')
+        df_new = df_copy.merge(df_new,
+                               left_on='ticker',
+                               right_on='symbol',
+                               how='left')
         df_out = df_new[['symbol', 'WKN', 'close', 'date']]
 
         # set datetime
