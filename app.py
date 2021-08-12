@@ -7,6 +7,7 @@ import datetime as dt
 # own methods
 from main import do_all, do_one
 from stockist.utils import get_table_download_link
+
 ########## PAGE CONFIG ##############
 st.set_page_config(
     page_title="Stock Price Finder",

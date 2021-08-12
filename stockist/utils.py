@@ -152,7 +152,8 @@ def get_table_download_link(df, sepa):
         comma = '.'
 
     csv = df.to_csv(sep=sepa,
-                    decimal=comma)
+                    decimal=comma,
+                    index=False)
     b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
     href = f'<a href="data:file/csv;base64,{b64}" download="results.csv">Download results here!</a>'
     return href
