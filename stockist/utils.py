@@ -90,11 +90,11 @@ def translate_wkn(df=None, search=None, ident=None, figi_key=None):
     return df_new.reset_index(drop=True)
 
 
-def history_data(df=None, date=None):
-    print(f'history_data was called for the date: \n{date}')
+def history_data(df=None, date_start=None, date_end=None, interval=None):
+    print(f'history_data was called for the dates: \n{date_start} - {date_end}')
     '''
     searches for historical stock values for designated stocks with the help of yfinance (yahoo).
-    takes in a df which contains the column 'ticker'
+    takes in a df which contains the column 'ticker', start and enddate as datetime and the predefined interval.
     ___________
     returns a df with the columns ticker, wkn and the historical values.
     '''
@@ -106,13 +106,14 @@ def history_data(df=None, date=None):
 
     # GET DATA
     if len(stickers) > 0:
-        selected_date = date.strftime('%Y-%m-%d')
-        end =(date + dt.timedelta(days=1)).strftime('%Y-%m-%d')
+        startdate_str = date_start.strftime('%Y-%m-%d')
+        enddate_str = date_end.strftime('%Y-%m-%d')
+        # (date_start + dt.timedelta(days=1)).strftime('%Y-%m-%d')
         df_concat = yf.download(tickers=stickers,
-                            start=end,
-                            end=end,
+                            start=startdate_str,
+                            end=enddate_str,
                             # period='1d',
-                            # interval='1d',
+                            interval=interval,
                             show_errors=True,
                             progress=True)
 
@@ -122,17 +123,18 @@ def history_data(df=None, date=None):
 
 
     if len(df_new) > 1: # implies that there was a bulk search
-        # only get the closing price and remove double indexing
-        new = df_concat.loc[:,('Close', slice(None))]
-        new.columns = [x[1] for x in new.columns] # remove duplex columns
+        # build new unstacked df with date, ticker and value as columns
+        df_trans = pd.DataFrame()
+        # only get the closing price
+        for i, row in df_concat.Close.iterrows():
+            single = pd.DataFrame(row).rename(columns={i:'value'})
+            single['date'] = i
+            df_trans = pd.concat([df_trans, single])
 
-        # transform and add old cols
-        df_trans = new.T.rename_axis('ticker')#.reset_index()
         df_out = df_trans.merge(df_new[['WKN', 'ticker']], left_index=True, right_on='ticker')
+        # rotate column order
         df_out = df_out.set_index(['WKN', 'ticker'])
-
-        # set datetime
-        df_out.columns = pd.to_datetime(df_out.columns)
+        df_out = df_out.reset_index().dropna(subset=['value'])
 
     else:
         df_out = df_concat
@@ -151,11 +153,16 @@ def get_table_download_link(df, sepa):
     else:
         comma = '.'
 
-    csv = df.to_csv(sep=sepa,
-                    decimal=comma,
-                    index=False)
-    b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
-    href = f'<a href="data:file/csv;base64,{b64}" download="results.csv">Download results here!</a>'
+    try:
+        csv = df.to_csv(sep=sepa,
+                        decimal=comma,
+                        index=False)
+        b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
+        href = f'<a href="data:file/csv;base64,{b64}" download="results.csv">Download results here!</a>'
+
+    except Exception as e:
+        href = f'Sorry, something went wrong with the request:<br>{df}'
+
     return href
 
 

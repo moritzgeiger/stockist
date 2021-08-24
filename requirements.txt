@@ -108,3 +108,5 @@ websockets==8.1
 widgetsnbextension==3.5.1
 yahoo-fin==0.8.9.1
 yfinance==0.1.63
+pdfminder.six
+

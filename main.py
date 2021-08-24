@@ -17,11 +17,14 @@ receiver_email = (os.environ.get("RECEIVER")).split(',') # need list
 debug = os.environ.get("DEBUG").lower() in ['true', 'yes', '1', 'most certainly', 'gladly', 'I can hardly disagree']
 signature = f"<p>Sincerely, <br>Your Stockist</p>"
 
-def do_all(df, date, receiver_email=receiver_email):
+def do_all(df, date_start, date_end, interval, receiver_email=receiver_email):
     trans_df = translate_wkn(df=df, figi_key=figi_key)
-    # fin_df = history_data(trans_df, date)
-    fin_df = market_data(df=trans_df, key=MARKET_KEY, date=date)
+    if interval in ['Please select', '1d']:
+        fin_df = market_data(df=trans_df, key=MARKET_KEY, date_start=date_start, date_end=date_end)
+    else:
+        fin_df = history_data(trans_df, date_start=date_start, date_end=date_end, interval=interval)
     try:
+        # if mailing breaks, app should still run
         send_email(homename=homename,
               sender_email=sender_email,
               receiver_email=receiver_email,
