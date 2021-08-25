@@ -4,8 +4,8 @@ import pandas as pd
 from io import BytesIO
 import datetime as dt
 
-# own methods
-from main import do_all, do_one
+# own modules
+from main import do_all, do_one, do_pdf
 from stockist.utils import get_table_download_link
 
 ########## PAGE CONFIG ##############
@@ -74,6 +74,21 @@ with st.beta_expander("Check one equity"):
         df_one = do_one(search=search, date=date_one, ident=identifier)
         st.write(f'Your results are here!')
         st.write(df_one)
+
+
+######## PDF PARSING ########
+with st.beta_expander("PDF Reader (Beta)"):
+    files = st.file_uploader("Upload one ZIP file containing pdfs or a set of PDF files to read.",
+                                type=([".pdf", ".zip"]),
+                                accept_multiple_files=True)
+    if files:
+        st.write(files[0].name)
+        if st.button('Parse Data'):
+            df = do_pdf(files)
+            st.write(df)
+
+            st.markdown(get_table_download_link(df, sepa=';'), unsafe_allow_html=True)
+
 
 
 ############# SIDEBAR ################

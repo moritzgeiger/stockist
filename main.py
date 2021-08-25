@@ -1,9 +1,11 @@
+from io import BytesIO
 from dotenv import load_dotenv, find_dotenv
 import os
 
 # own pckgs
 from stockist.utils import translate_wkn, history_data, send_email
 from stockist.marketstack import market_data
+from stockist.pdfparser import pdf_parser, unzipper
 
 ### ENV VARIABLES
 load_dotenv(find_dotenv())
@@ -44,3 +46,14 @@ def do_one(search=None, date=None, ident=None):
     fin_df = market_data(df=trans_df, key=MARKET_KEY, date=date)
 
     return fin_df
+
+def do_pdf(pdfs):
+    if all([x.name.endswith('.zip') for x in pdfs]):
+        print('\n\n\n\n\nprocessing zip file\n\n\n\n\n')
+        unzipped = unzipper(pdfs[0])
+        df = pdf_parser(unzipped)
+        _ = [os.remove(x) for x in unzipped]
+        return df
+
+    df = pdf_parser(pdfs)
+    return df
