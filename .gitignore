@@ -4,5 +4,8 @@
 .DS_Store
 raw_data/
 *.csv
+*.pdf
+*.PDF
 **/__pycache__/
 .env
+data/__MACOSX
