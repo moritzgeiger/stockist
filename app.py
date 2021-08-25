@@ -82,7 +82,6 @@ with st.beta_expander("PDF Reader (Beta)"):
                                 type=([".pdf", ".zip"]),
                                 accept_multiple_files=True)
     if files:
-        st.write(files[0].name)
         if st.button('Parse Data'):
             df = do_pdf(files)
             st.write(df)
