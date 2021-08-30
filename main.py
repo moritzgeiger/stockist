@@ -9,7 +9,7 @@ from stockist.pdfparser import pdf_parser, unzipper
 
 ### ENV VARIABLES
 load_dotenv(find_dotenv())
-MARKET_KEY = os.environ.get('MARKET')
+MARKET_KEY = os.environ.get('MARKET2')
 figi_key = os.environ.get("FIGI")
 port = 465  # For SSL
 GMAIL = os.environ.get("GMAIL")
