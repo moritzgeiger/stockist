@@ -49,7 +49,7 @@ def market_data(df=None, key=None, date_start=None, date_end=None):
         df_new = df_copy.merge(df_new,
                                left_on='ticker',
                                right_on='symbol',
-                               how='left', )
+                               )
         df_out = df_new[['ticker', 'WKN', 'close', 'date']]
 
         # all requests come from NYSE

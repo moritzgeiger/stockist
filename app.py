@@ -53,6 +53,7 @@ with st.beta_expander("CSV File Upload"):
             st.markdown(get_table_download_link(df_fin, sepa), unsafe_allow_html=True)
 
             try:
+                # check if all WKNs are still in the df
                 missing = [x for x in set(df.WKN) if x not in set(df_fin.WKN)]
                 if missing:
                     st.write(f"The following WKNs couldn't be found:")
